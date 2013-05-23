@@ -1,0 +1,176 @@
+<html>
+<head>
+<title>Asteroid</title>      
+<script language="javascript" src="processing.init.js"></script>
+<script language="javascript" src="processing.js"></script>
+<style>
+body {
+    font-family: sans-serif;
+    font-size: 12px;
+    background: #eee;
+	overflow: hidden;
+}
+</style>
+</head>
+<body>
+<script type="application/processing">
+ArrayList schussListe = new ArrayList();
+ArrayList gegnerListe = new ArrayList();
+Player player = new Player(300, 400);
+
+int schussCounter = 0;
+int gegnerCounter = 0;
+int punkte = 0;
+
+int[] colors = { #F6CECE, #F6E3CE, #F5F6CE, #F6CEE3, #F6CEF5, #E3CEF6, #E3F6CE, #CEF6CE, #CEF6E3, #CEF6F5, #CEE3F6, #CECEF6 };
+
+// Setup the Processing Canvas
+void setup(){
+    size(600, 450);
+    frameRate(50);
+}
+
+// Main draw loop
+void draw(){
+    background(0);
+
+    player.draw();
+    
+    for(int i = schussListe.size() - 1; i >= 0; i--) {
+        Schuss s = (Schuss) schussListe.get(i);
+        s.draw();
+        
+        if (s.ypos < -20) {
+            schussListe.remove(i);
+        }
+        else {
+            for(int ig = gegnerListe.size() - 1; ig >= 0; ig--) {
+                Gegner g = (Gegner) gegnerListe.get(ig);
+                
+                float d = dist(s.xpos, s.ypos, g.xpos, g.ypos);
+                if(d < g.size) {
+                    // HIER HABEN WIR EINE KOLLISION!!
+                    punkte++;
+                    schussListe.remove(i);
+                    gegnerListe.remove(ig);
+                    continue;
+                }
+            }
+        }
+    }
+    
+    for(int i = gegnerListe.size() - 1; i >= 0; i--) {
+        Gegner g = (Gegner) gegnerListe.get(i);
+        g.draw();
+        
+        if (g.ypos > 470) {
+            gegnerListe.remove(i);
+            punkte--;
+        }
+    }
+    
+    schussCounter++;
+    gegnerCounter++;
+    if (gegnerCounter >= 50) {
+        gegnerCounter = 0;
+        gegnerListe.add(new Gegner(random(20.0, 580.0), -20));
+    }
+    
+    if(punkte < 0) {
+        punkte = 0;
+    }
+    
+    var p = document.getElementById('punkte');
+    p.innerHTML = punkte;
+}
+
+class Player {
+    float xpos, ypos;
+    
+    Player(float x, float y) {
+        xpos = x;
+        ypos = y;
+    }
+    
+    void draw() {
+		if(keyPressed) {
+			if(key == CODED) {
+				if(keyCode == LEFT) {
+					xpos = xpos - 5;
+				}
+				if(keyCode == RIGHT) {
+					xpos = xpos + 5;
+				}
+				if(keyCode == UP) {
+					if(schussCounter >= 15) {
+		                schussCounter = 0;
+		                schussListe.add(new Schuss(xpos, ypos));
+		            }
+				}
+			}
+		}
+
+		if(xpos < 0) {
+            xpos = 0;
+        }
+		else if(xpos > 600) {
+            xpos = 600;
+        }
+        
+        fill(255);
+        triangle(xpos, ypos, xpos+15, ypos+30, xpos-15, ypos+30);
+    }
+}
+
+class Schuss {
+    float xpos, ypos;
+    
+    Schuss(float x, float y) {
+        xpos = x;
+        ypos = y;
+    }
+    
+    void draw() {
+        ypos = ypos - 3;
+        
+        fill(#2EFEF7);
+        ellipse(xpos, ypos, 3, 12);
+    }
+}
+
+class Gegner {
+    float xpos, ypos, speed;
+	int size, mycolor;
+    
+    Gegner(float x, float y) {
+        xpos = x;
+        ypos = y;
+		speed = random(0.5, 1.0);
+		size = int(random(15, 30));
+		int i = int(random(colors.length-1));
+		mycolor = colors[i];
+    }
+    
+    void draw() {
+        ypos = ypos + speed;
+        
+        fill(mycolor);
+        ellipse(xpos, ypos, size*2, size*2);
+    }
+}
+
+</script>
+<canvas style="float:left; margin-right:20px; margin-bottom:20px" width="600px" height="450px"></canvas>
+<div style="float:left; width:100px;">
+<div><strong>PUNKTE: <span id="punkte"></span></strong></div>
+<div style="color:grey"><br>
+<strong>HILFE:</strong><br>
+Für jeden abgeschossenen Asteroiden gibt es einen Punkt. Für jeden der nicht abgefangen werden kann gibt es Abzug.<br>
+<strong>Pfeiltasten</strong> rechts und links für Bewegung, oben für Schiessen.<br>
+<br>
+<strong>INFO:</strong><br>
+Asteroid-Spiel implementiert mit HTML5-Canvas und Processing.js.
+</div>
+</div>
+</body>
+</html>
